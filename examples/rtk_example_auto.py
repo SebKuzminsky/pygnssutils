@@ -22,8 +22,10 @@ import hal
 
 CONNECTED = 1
 
+connected_to_hal = False
+
 if __name__ == "__main__":
-    h = hal.component('gnss')
+    h = hal.component('hal-gnss-rtk')
     h.newpin("lat", hal.HAL_FLOAT, hal.HAL_OUT)
     h.newpin("lon", hal.HAL_FLOAT, hal.HAL_OUT)
 
@@ -120,6 +122,10 @@ if __name__ == "__main__":
                         #print(f"*** {position_message['lat']=:.7f} {position_message['lon']=:.7f}")
                         h['lat'] = position_message['lat']
                         h['lon'] = position_message['lon']
+
+                        if not connected_to_hal:
+                            h.ready()
+                            connected_to_hal = True
 
                     except Empty:
                         pass
