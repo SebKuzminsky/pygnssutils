@@ -117,7 +117,7 @@ if __name__ == "__main__":
                 ):  # run until user presses CTRL-C
                     try:
                         position_message = position_queue.get(block=True, timeout=1.5)
-                        print(f"*** {position_message['lat']=:.7f} {position_message['lon']=:.7f}")
+                        #print(f"*** {position_message['lat']=:.7f} {position_message['lon']=:.7f}")
                         h['lat'] = position_message['lat']
                         h['lon'] = position_message['lon']
 
