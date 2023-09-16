@@ -47,6 +47,7 @@ if __name__ == "__main__":
     REFSEP = 26.1743
 
     send_queue = Queue()
+    position_queue = Queue()
     sourcetable_queue = Queue()
     stop_event = Event()
 
@@ -62,6 +63,7 @@ if __name__ == "__main__":
             enableubx=True,
             showhacc=True,
             verbosity=VERBOSITY_LOW,
+            position_queue=position_queue,
         ) as gna:
             gna.run()
             sleep(2)  # wait for receiver to output at least 1 navigation solution
@@ -107,7 +109,13 @@ if __name__ == "__main__":
                 while (
                     streaming and not stop_event.is_set()
                 ):  # run until user presses CTRL-C
-                    sleep(1)
+                    try:
+                        position_message = position_queue.get(block=True, timeout=1.5)
+                        print(f"*** {position_message['lat']=:.7f} {position_message['lon']=:.7f}")
+
+                    except Empty:
+                        pass
+
                 sleep(1)
 
     except KeyboardInterrupt:
