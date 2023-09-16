@@ -61,6 +61,7 @@ if __name__ == "__main__":
             idonly=True,
             enableubx=True,
             showhacc=True,
+            verbosity=VERBOSITY_LOW,
         ) as gna:
             gna.run()
             sleep(2)  # wait for receiver to output at least 1 navigation solution
