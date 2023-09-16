@@ -151,6 +151,7 @@ class GNSSSkeletonApp:
             stream, protfilter=(NMEA_PROTOCOL | UBX_PROTOCOL | RTCM3_PROTOCOL)
         )
         while not stopevent.is_set():
+            sleep(0.01)
             try:
                 if stream.in_waiting:
                     _, parsed_data = ubr.read()
