@@ -19,6 +19,8 @@ Optional keyword arguments:
 - enableubx - suppresses NMEA receiver output and substitutes a minimum set
   of UBX messages instead (NAV-PVT, NAV-SAT, NAV-DOP, RXM-RTCM).
 - showhacc - show estimate of horizonal accuracy in metres (if available).
+- position_queue - whenever a position update comes from the receiver,
+  the app will put a dict on this queue with keys 'lat' and 'lon'.
 
 Created on 27 Jul 2023
 
@@ -78,6 +80,7 @@ class GNSSSkeletonApp:
         self.enableubx = kwargs.get("enableubx", False)
         self.showhacc = kwargs.get("showhacc", False)
         self.verbosity = kwargs.get("verbosity", VERBOSITY_MEDIUM)
+        self.position_queue = kwargs.get("position_queue", None)
         self.stream = None
         self.connected = DISCONNECTED
         self.lat = 0
@@ -164,6 +167,14 @@ class GNSSSkeletonApp:
                             )
                         else:
                             nty = ""
+
+                        if parsed_data.identity == 'NAV-PVT':
+                            if self.position_queue is not None:
+                                position_message = {
+                                    'lat': self.lat,
+                                    'lon': self.lon
+                                }
+                                self.position_queue.put(position_message)
 
                         if self.verbosity >= VERBOSITY_MEDIUM:
                             if self.idonly:
