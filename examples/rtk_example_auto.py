@@ -81,7 +81,7 @@ if __name__ == "__main__":
                 )
 
                 try:
-                    srt, (mountpoint, dist) = sourcetable_queue.get(timeout=3)
+                    srt, (mountpoint, dist) = sourcetable_queue.get(timeout=5)
                     if mountpoint is None:
                         raise Empty
                     print(
