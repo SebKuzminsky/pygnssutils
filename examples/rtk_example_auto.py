@@ -18,9 +18,15 @@ from time import sleep
 from pygnssutils import VERBOSITY_LOW, GNSSNTRIPClient
 from gnssapp import GNSSSkeletonApp
 
+import hal
+
 CONNECTED = 1
 
 if __name__ == "__main__":
+    h = hal.component('gnss')
+    h.newpin("lat", hal.HAL_FLOAT, hal.HAL_OUT)
+    h.newpin("lon", hal.HAL_FLOAT, hal.HAL_OUT)
+
     # GNSS receiver serial port parameters - AMEND AS REQUIRED:
     SERIAL_PORT = "/dev/ttyACM0"
     BAUDRATE = 460800
@@ -112,6 +118,8 @@ if __name__ == "__main__":
                     try:
                         position_message = position_queue.get(block=True, timeout=1.5)
                         print(f"*** {position_message['lat']=:.7f} {position_message['lon']=:.7f}")
+                        h['lat'] = position_message['lat']
+                        h['lon'] = position_message['lon']
 
                     except Empty:
                         pass
