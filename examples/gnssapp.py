@@ -33,6 +33,7 @@ from queue import Empty, Queue
 from threading import Event, Thread
 from time import sleep
 
+from pygnssutils import VERBOSITY_MEDIUM
 from pynmeagps import NMEAMessageError, NMEAParseError
 from pyrtcm import RTCMMessage, RTCMMessageError, RTCMParseError
 from serial import Serial
@@ -76,6 +77,7 @@ class GNSSSkeletonApp:
         self.idonly = kwargs.get("idonly", True)
         self.enableubx = kwargs.get("enableubx", False)
         self.showhacc = kwargs.get("showhacc", False)
+        self.verbosity = kwargs.get("verbosity", VERBOSITY_MEDIUM)
         self.stream = None
         self.connected = DISCONNECTED
         self.lat = 0
@@ -163,10 +165,11 @@ class GNSSSkeletonApp:
                         else:
                             nty = ""
 
-                        if self.idonly:
-                            print(f"GNSS>> {parsed_data.identity}{nty}")
-                        else:
-                            print(parsed_data)
+                        if self.verbosity >= VERBOSITY_MEDIUM:
+                            if self.idonly:
+                                print(f"GNSS>> {parsed_data.identity}{nty}")
+                            else:
+                                print(parsed_data)
 
                 # send any queued output data to receiver
                 self._send_data(ubr.datastream, sendqueue)
@@ -202,8 +205,9 @@ class GNSSSkeletonApp:
         if hasattr(parsed_data, "hMSL") and hasattr(parsed_data, "height"):
             self.sep = (parsed_data.height - parsed_data.hMSL) / 1000
         if self.showhacc and hasattr(parsed_data, "hAcc"):  # UBX hAcc is in mm
-            unit = 1 if parsed_data.identity == "PUBX00" else 1000
-            print(f"Estimated horizontal accuracy: {(parsed_data.hAcc / unit):.3f} m")
+            if self.verbosity >= VERBOSITY_MEDIUM:
+                unit = 1 if parsed_data.identity == "PUBX00" else 1000
+                print(f"Estimated horizontal accuracy: {(parsed_data.hAcc / unit):.3f} m")
 
     def _send_data(self, stream: Serial, sendqueue: Queue):
         """
@@ -219,11 +223,12 @@ class GNSSSkeletonApp:
                 while not sendqueue.empty():
                     data = sendqueue.get(False)
                     raw, parsed = data
-                    source = "NTRIP>>" if isinstance(parsed, RTCMMessage) else "GNSS<<"
-                    if self.idonly:
-                        print(f"{source} {parsed.identity}")
-                    else:
-                        print(parsed)
+                    if self.verbosity >= VERBOSITY_MEDIUM:
+                        if self.idonly:
+                            source = "NTRIP>>" if isinstance(parsed, RTCMMessage) else "GNSS<<"
+                            print(f"{source} {parsed.identity}")
+                        else:
+                            print(parsed)
                     stream.write(raw)
                     sendqueue.task_done()
             except Empty:
@@ -281,7 +286,8 @@ if __name__ == "__main__":
     stop_event = Event()
 
     try:
-        print("Starting GNSS reader/writer...\n")
+        if self.verbosity >= VERBOSITY_MEDIUM:
+            print("Starting GNSS reader/writer...\n")
         with GNSSSkeletonApp(
             args.port,
             int(args.baudrate),
@@ -298,4 +304,5 @@ if __name__ == "__main__":
 
     except KeyboardInterrupt:
         stop_event.set()
-        print("Terminated by user")
+        if self.verbosity >= VERBOSITY_MEDIUM:
+            print("Terminated by user")
